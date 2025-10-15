@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Calendario Escolar - Colegio Renata Preto De Brunelli</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --azul:#0039a6;
+    --amarillo:#ffcc00;
+    --fondo:#f3f6ff;
+    --card:#ffffff;
+    --text:#222;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:"Poppins",system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;
+    background:var(--fondo);
+    color:var(--text);
+  }
+
+  header{
+    background:var(--azul);
+    color:#fff;
+    padding:18px 20px;
+    font-weight:700;
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  header i{font-size:22px}
+  header .title{font-size:18px}
+
+  .wrap{
+    max-width:1200px;
+    margin:28px auto;
+    padding:18px;
+  }
+
+  .panel{
+    background:var(--card);
+    border-radius:14px;
+    box-shadow:0 6px 20px rgba(0,0,0,0.08);
+    overflow:hidden;
+  }
+
+  .panel .top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:18px 22px;
+    border-bottom:4px solid var(--amarillo);
+    gap:12px;
+  }
+  .month-controls{
+    display:flex;
+    gap:8px;
+    align-items:center;
+  }
+  .btn{
+    background:var(--amarillo);
+    border:none;
+    color:var(--azul);
+    padding:8px 12px;
+    border-radius:10px;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .title-big{color:var(--azul);font-size:20px;font-weight:700}
+
+  .content{
+    display:grid;
+    grid-template-columns: 1fr 320px;
+    gap:20px;
+    padding:22px;
+  }
+
+  /* calendario principal */
+  .calendar{
+    background:transparent;
+  }
+  table.calendar-table{
+    width:100%;
+    border-collapse:collapse;
+    table-layout:fixed; /* importantísimo para que los días sean cuadrados iguales */
+  }
+  table.calendar-table th{
+    background:var(--azul);
+    color:#fff;
+    padding:10px;
+    font-weight:700;
+    font-size:14px;
+  }
+  table.calendar-table td{
+    border:1px solid #e6e6e6;
+    padding:8px;
+    height:110px;            /* altura fija -> cuadrados simétricos */
+    vertical-align:top;
+    background:#fff;
+    position:relative;
+  }
+  /* número del día */
+  .daynum{
+    display:block;
+    font-weight:700;
+    color:var(--azul);
+    margin-bottom:6px;
+  }
+  /* evento pequeño dentro del día (si quieres destacar en cuadrito) */
+  .dot-event{
+    display:inline-block;
+    background:var(--amarillo);
+    color:var(--azul);
+    padding:4px 6px;
+    border-radius:6px;
+    font-size:12px;
+    font-weight:600;
+    margin-top:6px;
+  }
+  /* sidebar mini-cal y lista de eventos */
+  .sidebar{
+    width:100%;
+  }
+  .mini{
+    background:linear-gradient(90deg,var(--azul),#0066cc);
+    color:#fff;
+    padding:14px;
+    border-radius:10px;
+    font-weight:700;
+    text-align:center;
+    margin-bottom:14px;
+  }
+  .events-list{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .event-card{
+    background:var(--azul);
+    color:#fff;
+    border-left:6px solid var(--amarillo);
+    padding:10px;
+    border-radius:8px;
+  }
+  .event-card h4{margin:0 0 6px 0;font-size:15px}
+  .event-card p{margin:0;font-size:13px;opacity:0.95}
+
+  /* responsive */
+  @media (max-width:980px){
+    .content{grid-template-columns:1fr}
+    table.calendar-table td{height:90px}
+  }
+  @media (max-width:520px){
+    table.calendar-table td{height:72px;padding:6px}
+    .btn{padding:6px 8px}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <i>🎓</i>
+  <div class="title">Colegio Renata Preto De Brunelli — Calendario Escolar</div>
+</header>
+
+<div class="wrap">
+  <div class="panel">
+    <div class="top">
+      <div>
+        <div class="title-big" id="monthYearTitle">Octubre 2025</div>
+        <div style="font-size:13px;color:#666">Navega por meses y años, los días siempre concuerdan</div>
+      </div>
+
+      <div class="month-controls">
+        <select id="selectYear" aria-label="Seleccionar año"></select>
+        <select id="selectMonth" aria-label="Seleccionar mes"></select>
+        <button class="btn" id="prevBtn">◀</button>
+        <button class="btn" id="nextBtn">▶</button>
+      </div>
+    </div>
+
+    <div class="content">
+      <!-- calendario grande -->
+      <div class="calendar">
+        <table class="calendar-table" aria-label="Calendario mensual">
+          <thead>
+            <tr>
+              <th>Dom</th><th>Lun</th><th>Mar</th><th>Mié</th><th>Jue</th><th>Vie</th><th>Sáb</th>
+            </tr>
+          </thead>
+          <tbody id="calendarBody">
+            <!-- se genera dinámicamente -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- sidebar mini + lista de eventos -->
+      <aside class="sidebar">
+        <div class="mini" id="miniTitle">Oct 2025</div>
+
+        <div class="events-list" id="eventsList">
+          <!-- tarjetas de eventos -->
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+
+<script>
+/*
+  Calendario dinámico (necesita JS). 
+  - Genera los días correctos por mes/año.
+  - Navegadores: prev/next + selects.
+  - Puedes añadir eventos en la array `events`.
+*/
+
+/* -------- Datos de ejemplo de eventos (puedes editarlos) --------
+  Cada evento tiene: date en formato YYYY-MM-DD, title, description.
+*/
+const events = [
+  {date:'2025-10-04', title:'Oktoberfest', description:'9 AM – 4 PM (Plaza de la Amistad)'},
+  {date:'2025-10-06', title:'A2 - SK', description:'Evaluación del nivel A2'},
+  {date:'2025-10-16', title:'Reunión Docentes', description:'Sala de profesores 14:00'}
+  // añade más eventos aquí...
+];
+
+/* -------- elementos del DOM -------- */
+const calendarBody = document.getElementById('calendarBody');
+const monthYearTitle = document.getElementById('monthYearTitle');
+const miniTitle = document.getElementById('miniTitle');
+const eventsList = document.getElementById('eventsList');
+const selectMonth = document.getElementById('selectMonth');
+const selectYear = document.getElementById('selectYear');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+
+/* -------- variables de estado -------- */
+let today = new Date();
+let currentMonth = today.getMonth(); // 0..11
+let currentYear = today.getFullYear();
+
+/* -------- helpers -------- */
+const monthNames = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+function pad(n){return n<10?'0'+n:n}
+
+/* -------- inicializar selects (años y meses) -------- */
+function initSelectors(){
+  // Meses
+  selectMonth.innerHTML = monthNames.map((m,i)=>`<option value="${i}">${m}</option>`).join('');
+  // Años (rango razonable)
+  const start = currentYear - 3;
+  const end = currentYear + 3;
+  let opts = '';
+  for(let y=start; y<=end; y++) opts += `<option value="${y}">${y}</option>`;
+  selectYear.innerHTML = opts;
+}
+
+/* -------- buscar eventos para un mes/año -------- */
+function getEventsForMonth(year, month){
+  // devuelve array de eventos del mes (month 0..11)
+  return events.filter(ev=>{
+    const d = ev.date.split('-');
+    return Number(d[0])===year && Number(d[1])===month+1;
+  });
+}
+
+/* -------- renderizar calendario -------- */
+function renderCalendar(year, month){
+  // título
+  monthYearTitle.textContent = `${monthNames[month]} ${year}`;
+  miniTitle.textContent = `${monthNames[month].slice(0,3)} ${year}`;
+
+  // primer día de mes y cantidad de días
+  const firstDay = new Date(year, month, 1).getDay(); // 0=Dom
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+
+  // limpiar tbody
+  calendarBody.innerHTML = '';
+  let row = document.createElement('tr');
+  // celdas vacías iniciales
+  for(let i=0;i<firstDay;i++){
+    const td = document.createElement('td');
+    td.innerHTML = '';
+    row.appendChild(td);
+  }
+  // generar días
+  for(let d=1; d<=daysInMonth; d++){
+    const cell = document.createElement('td');
+    const dayNum = document.createElement('span');
+    dayNum.className = 'daynum';
+    dayNum.textContent = d;
+    cell.appendChild(dayNum);
+
+    // buscar eventos para esta fecha
+    const iso = `${year}-${pad(month+1)}-${pad(d)}`;
+    const dayEvents = events.filter(ev => ev.date===iso);
+    if(dayEvents.length){
+      dayEvents.forEach(ev=>{
+        const dot = document.createElement('div');
+        dot.className = 'dot-event';
+        dot.textContent = ev.title;
+        cell.appendChild(dot);
+      });
+    }
+
+    row.appendChild(cell);
+    // si se completó la fila (sabado) empuja y crea nueva
+    if((d + firstDay) % 7 === 0){
+      calendarBody.appendChild(row);
+      row = document.createElement('tr');
+    }
+  }
+  // si quedan celdas en la última fila, completarlas
+  const cellsInLastRow = row.querySelectorAll('td').length;
+  if(cellsInLastRow > 0 && cellsInLastRow < 7){
+    for(let i=cellsInLastRow;i<7;i++){
+      const td = document.createElement('td');
+      td.innerHTML = '';
+      row.appendChild(td);
+    }
+    calendarBody.appendChild(row);
+  }
+
+  // actualizar lista de eventos a la derecha
+  renderEventsSidebar(year, month);
+
+  // actualizar selects
+  selectMonth.value = month;
+  selectYear.value = year;
+}
+
+/* -------- render lista lateral de eventos -------- */
+function renderEventsSidebar(year, month){
+  const evs = getEventsForMonth(year, month);
+  eventsList.innerHTML = '';
+  if(evs.length===0){
+    eventsList.innerHTML = `<div style="padding:10px;color:#666">No hay eventos este mes.</div>`;
+    return;
+  }
+  evs.forEach(ev=>{
+    const card = document.createElement('div');
+    card.className = 'event-card';
+    card.innerHTML = `<h4>${formatDate(ev.date)} — ${ev.title}</h4><p>${ev.description||''}</p>`;
+    eventsList.appendChild(card);
+  });
+}
+
+/* -------- formatea YYYY-MM-DD a texto legible -------- */
+function formatDate(iso){
+  const [y,m,d] = iso.split('-');
+  return `${d}/${m}/${y}`;
+}
+
+/* -------- navegación -------- */
+function prevMonth(){
+  currentMonth--;
+  if(currentMonth < 0){ currentMonth = 11; currentYear--; }
+  renderCalendar(currentYear, currentMonth);
+}
+function nextMonth(){
+  currentMonth++;
+  if(currentMonth > 11){ currentMonth = 0; currentYear++; }
+  renderCalendar(currentYear, currentMonth);
+}
+
+/* -------- eventos UI -------- */
+prevBtn.addEventListener('click', prevMonth);
+nextBtn.addEventListener('click', nextMonth);
+selectMonth.addEventListener('change', (e)=>{
+  currentMonth = Number(e.target.value);
+  renderCalendar(currentYear, currentMonth);
+});
+selectYear.addEventListener('change', (e)=>{
+  currentYear = Number(e.target.value);
+  renderCalendar(currentYear, currentMonth);
+});
+
+/* -------- inicialización -------- */
+initSelectors();
+// seleccionar por defecto mes/año actuales
+selectMonth.value = currentMonth;
+selectYear.value = currentYear;
+renderCalendar(currentYear, currentMonth);
+</script>
+
+</body>
+</html>
